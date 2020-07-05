@@ -2,10 +2,13 @@ import { Recipe } from './recipe.model';
 import { Injectable } from '@angular/core';
 import { Ingredient } from '../shared/ingredient.model';
 import { ShoppingListService } from '../shopping-list/shopping-list.service';
+import { Subject } from 'rxjs';
 
 
 @Injectable()
 export class RecipeService {
+    // Membuat Custom Event dengan subject, menerima data recipe sebagai array
+    recipesChanged = new Subject<Recipe[]>();
 
     // Kita menggunakan EventEmitter untuk mengirim data di service 
     // Akan menjadi lebih mudah ketika mengirim data lintas component
@@ -44,5 +47,20 @@ export class RecipeService {
 
     addIngredientsToShoppingList(ingredients:any){
         this.slService.addIngredients(ingredients);
+    }
+
+    addRecipe(recipe:Recipe) {
+        this.recipes.push(recipe);
+        this.recipesChanged.next(this.recipes.slice());
+    }
+
+    updateRecipe(index:number, newRecipe:Recipe) {
+        this.recipes[index] = newRecipe;
+        this.recipesChanged.next(this.recipes.slice());
+    }
+
+    deleteRecipe(index:number){
+        this.recipes.splice(index, 1);
+        this.recipesChanged.next(this.recipes.slice());
     }
 }

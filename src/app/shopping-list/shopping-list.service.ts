@@ -6,6 +6,7 @@ export class ShoppingListService {
      * Kita bisa menggunakan event emitter atau subject untuk membuat custom event
      */
     ingredientsChanged = new Subject<Ingredient[]>();
+    startedEditing = new Subject<number>();
 
     private ingredients: Ingredient[] = [
         new Ingredient('Apples', 5),
@@ -18,6 +19,10 @@ export class ShoppingListService {
          * yang tersimpan dalam  service ini
          */
         return this.ingredients.slice();
+    }
+
+    getIngredient(index:number) {
+        return this.ingredients[index];
     }
 
     addIngredient(ingredient:Ingredient){
@@ -37,6 +42,18 @@ export class ShoppingListService {
         console.log('spread operator');
         // console.log(...ingredients);
         this.ingredients.push(...ingredients);
+        this.ingredientsChanged.next(this.ingredients.slice());
+    }
+
+    updateIngredient(index:number, newIngredient:Ingredient) {
+        this.ingredients[index] = newIngredient;
+        console.log(newIngredient);
+        this.ingredientsChanged.next(this.ingredients.slice());
+        console.log(this.ingredients.slice());
+    }
+
+    deleteIngredient(index:number){
+        this.ingredients.splice(index, 1);
         this.ingredientsChanged.next(this.ingredients.slice());
     }
 }
