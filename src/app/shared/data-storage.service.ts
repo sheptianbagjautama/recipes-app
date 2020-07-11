@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RecipeService } from '../recipes/recipe.service';
-import { map, take, tap } from 'rxjs/operators';
+import { map, take, tap, exhaustMap } from 'rxjs/operators';
 import { Recipe } from '../recipes/recipe.model';
+import { AuthService } from '../auth/auth.service';
 
 /**
  * Injectable disini berfungsi untuk memasukan server lain ke dalam service ini
@@ -15,7 +16,8 @@ import { Recipe } from '../recipes/recipe.model';
 
 export class DataStorageService {
     constructor(private http:HttpClient,
-                private recipeService:RecipeService) {}
+                private recipeService:RecipeService,
+                private authService:AuthService) {}
 
     storeRecipes(){
         const recipes = this.recipeService.getRecipes();
@@ -30,8 +32,9 @@ export class DataStorageService {
     } 
 
     fetchRecipes(){
-         return this.http
-        .get<Recipe[]>('https://ng-course-recipe-book-ea184.firebaseio.com/recipes.json')
+        return this.http.get<Recipe[]>(
+            'https://ng-course-recipe-book-ea184.firebaseio.com/recipes.json'
+        )
         .pipe(
             map(recipes => {
                 return recipes.map(recipe => {
@@ -43,4 +46,44 @@ export class DataStorageService {
             })
         )
     }
+
+    // Menambahkan token ke request tanpa menggunakan interceptor
+    // fetchRecipes(){
+    //     /**
+    //      * take(1) --> mengambil data terakhir user
+    //      * exhaustMap --> fungsinya untuk menunggu observable pertama yaitu this.authService.user. setelah 
+    //      * observable pertama tersebut selesai, akan lanjut ke observable kedua
+    //      */
+    //     return this.authService.user.pipe(
+    //         take(1), 
+    //         /**
+    //          * Observable pertama akan mendapatkan data user dari behaviour object, 
+    //          * disini kita parse lagi untuk di gunakan di observable kedua yaitu HTTP Request
+    //          */
+    //         exhaustMap(user => {
+    //             /**
+    //              * Disini kita akan return observable kedua, yang akan menggantikan observable pertama 
+    //              * intinya seluruh observable chain sekarang akan di gantikan oleh Observable HTTP request ini
+    //              */
+    //             return this.http.get<Recipe[]>(
+    //                 'https://ng-course-recipe-book-ea184.firebaseio.com/recipes.json',
+    //                 {
+    //                     params:new HttpParams().set('auth', user.token)
+    //                 }
+    //             );
+    //         }),
+    //         /**
+    //          * untuk transforming dan set data dari 2 operators map dan tap
+    //          * kita bisa tempatkan next steps after the exhaustMap
+    //          */
+    //         map(recipes => {
+    //             return recipes.map(recipe => {
+    //                 return { ...recipe, ingredients:recipe.ingredients ? recipe.ingredients : [] };
+    //             });
+    //         }),
+    //         tap(recipes => {
+    //             this.recipeService.setRecipes(recipes);
+    //         })
+    //     );
+    // }
 }
